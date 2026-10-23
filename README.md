@@ -76,31 +76,20 @@ Select a menu option by entering its number. Creating a ticket automatically enq
 
 ## Screenshots of the System
 
-Save clear screenshots captured from the running application in the `screenshots/` folder and keep these filenames in sync with the README:
+### Main Menu
 
-| Screenshot | What it should demonstrate |
-| --- | --- |
-| `screenshots/main-menu.png` | The main menu and available operations. |
-| `screenshots/queue-operations.png` | Enqueueing through ticket creation, queue display, peek, and processing. |
-| `screenshots/fifo-behavior.png` | Multiple tickets processed in the same order they were added. |
-| `screenshots/sorting-algorithm-1.png` | Bubble Sort by requester name, showing records before and after. |
-| `screenshots/sorting-algorithm-2.png` | Insertion Sort by ticket number, showing records before and after. |
-| `screenshots/input-validation.png` | Invalid menu input, blank field handling, or an empty-queue message. |
+![Main menu of the IT Help Desk Ticketing System](screenshots/main-menu.png)
 
-Each screenshot should be readable and accompanied by a short caption in the final submission. Capture it from the actual running application; do not use mockups.
+*The running application’s main menu and available operations.*
 
-## Repository Contents
+### Additional Required Screenshots
 
-```text
-Java-Sorting-Queue-Capstone/
-├── src/
-│   └── Main.java
-├── screenshots/
-│   ├── main-menu.png
-│   ├── queue-operations.png
-│   ├── fifo-behavior.png
-│   ├── sorting-algorithm-1.png
-│   ├── sorting-algorithm-2.png
-│   └── input-validation.png
-└── README.md
-```
+Add readable screenshots captured from the running application for:
+
+- Queue operations, including ticket creation/enqueue, display, peek, and processing/dequeue.
+- FIFO behavior, showing tickets processed in the order they were added.
+- Bubble Sort by requester name, showing records before and after sorting.
+- Insertion Sort by ticket number, showing records before and after sorting.
+- Input validation and appropriate error messages.
+
+Save each screenshot in the `screenshots/` folder and add it here with a short caption. Use actual program output, not mockups.
