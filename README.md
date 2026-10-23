@@ -82,11 +82,17 @@ Select a menu option by entering its number. Creating a ticket automatically enq
 
 *The running application’s main menu and available operations.*
 
+### Creating a Ticket
+
+![Creating a help desk ticket and adding it to the queue](screenshots/ticket-creation.png)
+
+*A ticket is assigned an ID and submission time, then added to the waiting queue with Pending status.*
+
 ### Additional Required Screenshots
 
 Add readable screenshots captured from the running application for:
 
-- Queue operations, including ticket creation/enqueue, display, peek, and processing/dequeue.
+- Queue operations, including queue display, peek, and processing/dequeue.
 - FIFO behavior, showing tickets processed in the order they were added.
 - Bubble Sort by requester name, showing records before and after sorting.
 - Insertion Sort by ticket number, showing records before and after sorting.
