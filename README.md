@@ -104,16 +104,35 @@ Select a menu option by entering its number. Creating a ticket automatically enq
 
 *Stored records show each ticket's number, requester, issue, submission time, and status.*
 
-### Additional Required Screenshots
+### Searching for a Ticket
 
-Add readable screenshots captured from the running application for:
+![Searching for a ticket by number and displaying its details](screenshots/ticket-search.png)
 
-- Queue operations, including queue display, peek, and processing/dequeue.
-- FIFO behavior, showing tickets processed in the order they were added.
-- Bubble Sort by requester name, showing records before and after sorting.
-- Insertion Sort by ticket number, showing records before and after sorting.
+*Searching by ticket number displays the matching ticket's details.*
 
-Save each screenshot in the `screenshots/` folder and add it here with a short caption. Use actual program output, not mockups.
+### Queue Operations
+
+![Queue display, peek, and processing operations](screenshots/queue-operations.png)
+
+*The waiting queue is displayed in FIFO order, peek shows the next ticket without removing it, and processing removes and marks the first ticket as processed.*
+
+### FIFO Behavior
+
+![Tickets displayed in their first-in, first-out arrival order](screenshots/fifo-behavior.png)
+
+*The waiting tickets are listed in the order they arrived, with the earliest ticket at the front of the queue.*
+
+### Bubble Sort by Requester Name
+
+![Bubble Sort showing ticket records before and after sorting by requester name](screenshots/sort-by-name.png)
+
+*The records are alphabetized by requester name while the FIFO queue order remains unchanged.*
+
+### Insertion Sort by Ticket Number
+
+![Insertion Sort showing ticket records before and after sorting by ticket number](screenshots/sort-by-ticket-number.png)
+
+*The records are arranged by ticket number while the FIFO queue order remains unchanged.*
 
 ### Returning to the Main Menu
 
