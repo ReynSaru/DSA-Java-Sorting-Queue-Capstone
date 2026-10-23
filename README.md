@@ -1,4 +1,4 @@
-# IT Help Desk Ticketing System
+# IT Help Desk Ticketing System for Captsone Project
 
 ## Project Description
 
