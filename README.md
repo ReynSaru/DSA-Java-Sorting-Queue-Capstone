@@ -25,6 +25,7 @@ The IT Help Desk Ticketing System is a console-based Java application for record
 - Sort ticket records by requester name or ticket number.
 - Save ticket records locally and reload them on the next launch.
 - Reject blank ticket details and invalid menu or ticket-number input with clear messages.
+- To return to the main menu, enter `0` at a ticket creation or search prompt, or choose `0` in the Queue Operations menu. Display and sort actions return to the main menu automatically when complete.
 - Handle empty record lists and empty queues without terminating unexpectedly.
 
 ## Data Structure Explanation
@@ -113,3 +114,9 @@ Add readable screenshots captured from the running application for:
 - Insertion Sort by ticket number, showing records before and after sorting.
 
 Save each screenshot in the `screenshots/` folder and add it here with a short caption. Use actual program output, not mockups.
+
+### Returning to the Main Menu
+
+![Returning to the main menu from ticket creation](screenshots/return-to-main-menu.png)
+
+*Entering `0` cancels ticket creation or a ticket search and returns to the main menu. The same return choice is available in the Queue Operations menu; display and sort actions return automatically when complete.*

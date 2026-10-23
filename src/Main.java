@@ -27,6 +27,7 @@ public class Main {
     private static final DateTimeFormatter DATE_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final int END_OF_INPUT = Integer.MIN_VALUE;
+    private static final int CANCEL_OPERATION = Integer.MIN_VALUE + 1;
     private static int nextTicketNumber = 1001;
 
     public static void main(String[] args) {
@@ -104,6 +105,7 @@ public class Main {
         }
 
         System.out.println("\n--- Create Help Desk Ticket ---");
+        System.out.println("Enter 0 at either prompt to return to the main menu.");
         String requesterName = readNonBlankLine("Requester name: ");
         if (requesterName == null) {
             return;
@@ -167,8 +169,9 @@ public class Main {
             return;
         }
 
+        System.out.println("\nEnter 0 to return to the main menu.");
         int ticketNumber = readTicketNumber("Enter a ticket number (for example, HD-1001): ");
-        if (ticketNumber == END_OF_INPUT) {
+        if (ticketNumber == END_OF_INPUT || ticketNumber == CANCEL_OPERATION) {
             return;
         }
 
@@ -190,9 +193,9 @@ public class Main {
             System.out.println("1. Display waiting queue");
             System.out.println("2. Peek at next ticket");
             System.out.println("3. Process next ticket (dequeue)");
-            System.out.println("4. Return to main menu");
+            System.out.println("0. Return to main menu");
 
-            int choice = readIntegerInRange("Choose an option: ", 1, 4);
+            int choice = readIntegerInRange("Choose an option: ", 0, 3);
             if (choice == END_OF_INPUT) {
                 return;
             }
@@ -207,7 +210,7 @@ public class Main {
                 case 3:
                     processNextTicket();
                     break;
-                case 4:
+                case 0:
                     inQueueMenu = false;
                     break;
                 default:
@@ -566,6 +569,10 @@ public class Main {
 
             try {
                 int ticketNumber = Integer.parseInt(normalized);
+                if (ticketNumber == 0) {
+                    System.out.println("Returning to the main menu.");
+                    return CANCEL_OPERATION;
+                }
                 if (ticketNumber > 0) {
                     return ticketNumber;
                 }
@@ -600,6 +607,10 @@ public class Main {
                 return null;
             }
             value = value.trim();
+            if (value.equals("0")) {
+                System.out.println("Returning to the main menu.");
+                return null;
+            }
             if (!value.isEmpty()) {
                 return value;
             }
