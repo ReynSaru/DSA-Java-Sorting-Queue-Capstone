@@ -1,2 +1,4 @@
 out/
 *.class
+tickets.txt
+tickets.txt.tmp

@@ -23,6 +23,7 @@ The IT Help Desk Ticketing System is a console-based Java application for record
 - Peek at the next ticket without removing it.
 - Process the next ticket, marking it as processed.
 - Sort ticket records by requester name or ticket number.
+- Save ticket records locally and reload them on the next launch.
 - Reject blank ticket details and invalid menu or ticket-number input with clear messages.
 - Handle empty record lists and empty queues without terminating unexpectedly.
 
@@ -39,6 +40,8 @@ Ticket records are stored in five `ArrayList`s:
 The values at a given index in all five lists describe the same ticket. The sorting methods swap every field at that index together to keep records synchronized.
 
 The waiting queue is a `Queue<Integer>` backed by `ArrayDeque<Integer>`. It contains ticket numbers in arrival order, not copies of ticket records. Queue display and peek operations use each queued number to find its record. Processing removes only the queue's head ticket and marks that ticket as processed. Sorting changes the order of records in the `ArrayList`s, but never changes the queue.
+
+Ticket records are saved to `tickets.txt` in the directory where the program is launched. The file is updated when a ticket is created or processed and loaded on startup. Pending tickets are restored to the queue in ticket-number/arrival order, even if the record lists had been sorted before the application closed. The data file is excluded from Git so local ticket details are not accidentally committed.
 
 The application uses only static methods and built-in Java data types and collections for its procedural logic. It does not define custom ticket/entity classes or use custom objects.
 
@@ -72,7 +75,7 @@ javac -d out src/Main.java
 java -cp out Main
 ```
 
-Select a menu option by entering its number. Creating a ticket automatically enqueues it. Choose **Queue operations** to display the waiting list, peek at the next ticket, or process it.
+Select a menu option by entering its number. Creating a ticket automatically enqueues and saves it. Choose **Queue operations** to display the waiting list, peek at the next ticket, or process it. Processed status is saved immediately. On later launches, the application reloads saved tickets and restores pending tickets to the queue.
 
 ## Screenshots of the System
 
@@ -82,11 +85,23 @@ Select a menu option by entering its number. Creating a ticket automatically enq
 
 *The running application’s main menu and available operations.*
 
+### Input Validation
+
+![Invalid menu selections are rejected and the application prompts again](screenshots/input-validation.png)
+
+*Out-of-range and non-numeric menu entries are rejected without exiting the application.*
+
 ### Creating a Ticket
 
 ![Creating a help desk ticket and adding it to the queue](screenshots/ticket-creation.png)
 
 *A ticket is assigned an ID and submission time, then added to the waiting queue with Pending status.*
+
+### Displaying Ticket Records
+
+![Displaying stored help desk ticket records](screenshots/ticket-records.png)
+
+*Stored records show each ticket's number, requester, issue, submission time, and status.*
 
 ### Additional Required Screenshots
 
@@ -96,6 +111,5 @@ Add readable screenshots captured from the running application for:
 - FIFO behavior, showing tickets processed in the order they were added.
 - Bubble Sort by requester name, showing records before and after sorting.
 - Insertion Sort by ticket number, showing records before and after sorting.
-- Input validation and appropriate error messages.
 
 Save each screenshot in the `screenshots/` folder and add it here with a short caption. Use actual program output, not mockups.

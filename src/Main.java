@@ -1,7 +1,15 @@
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Queue;
 import java.util.Scanner;
@@ -14,12 +22,23 @@ public class Main {
     private static final ArrayList<String> submissionTimes = new ArrayList<String>();
     private static final ArrayList<String> ticketStatuses = new ArrayList<String>();
     private static final Queue<Integer> ticketQueue = new ArrayDeque<Integer>();
+    private static final Path DATA_FILE = Paths.get("tickets.txt");
+    private static final Path TEMP_DATA_FILE = Paths.get("tickets.txt.tmp");
     private static final DateTimeFormatter DATE_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final int END_OF_INPUT = Integer.MIN_VALUE;
     private static int nextTicketNumber = 1001;
 
     public static void main(String[] args) {
+        try {
+            loadTickets();
+        } catch (IOException exception) {
+            System.out.println("Unable to load saved tickets from " + DATA_FILE
+                    + ": " + exception.getMessage());
+            System.out.println("The application will exit to avoid overwriting saved data.");
+            return;
+        }
+
         boolean running = true;
 
         while (running) {
@@ -79,6 +98,11 @@ public class Main {
     }
 
     private static void addTicket() {
+        if (nextTicketNumber < 1) {
+            System.out.println("\nNo more ticket numbers are available.");
+            return;
+        }
+
         System.out.println("\n--- Create Help Desk Ticket ---");
         String requesterName = readNonBlankLine("Requester name: ");
         if (requesterName == null) {
@@ -107,6 +131,16 @@ public class Main {
             submissionTimes.remove(lastIndex);
             ticketStatuses.remove(lastIndex);
             System.out.println("Unable to add the ticket to the queue. No ticket was saved.");
+            return;
+        }
+
+        try {
+            saveTickets();
+        } catch (IOException exception) {
+            ticketQueue.remove(Integer.valueOf(ticketNumber));
+            removeTicketRecord(ticketNumbers.size() - 1);
+            System.out.println("Unable to save the new ticket. It was not added: "
+                    + exception.getMessage());
             return;
         }
 
@@ -237,10 +271,190 @@ public class Main {
             return;
         }
 
-        ticketQueue.remove();
         ticketStatuses.set(index, "Processed");
+        try {
+            saveTickets();
+        } catch (IOException exception) {
+            ticketStatuses.set(index, "Pending");
+            System.out.println("Unable to save the processed ticket. It remains in the queue: "
+                    + exception.getMessage());
+            return;
+        }
+
+        ticketQueue.remove();
         System.out.println("\nProcessed the next ticket in FIFO order:");
         displayTicket(index);
+    }
+
+    private static void loadTickets() throws IOException {
+        if (!Files.exists(DATA_FILE)) {
+            return;
+        }
+
+        List<String> savedLines = Files.readAllLines(DATA_FILE, StandardCharsets.UTF_8);
+        int highestTicketNumber = 0;
+        int loadedCount = 0;
+
+        for (int lineIndex = 0; lineIndex < savedLines.size(); lineIndex++) {
+            try {
+                ArrayList<String> fields = splitSavedRecord(savedLines.get(lineIndex));
+                if (fields.size() != 5) {
+                    throw new IllegalArgumentException("expected five fields");
+                }
+
+                int ticketNumber = Integer.parseInt(fields.get(0));
+                String status = fields.get(1);
+                String submittedAt = fields.get(2);
+                String requesterName = fields.get(3);
+                String issueDescription = fields.get(4);
+
+                if (ticketNumber < 1 || findTicketIndex(ticketNumber) >= 0) {
+                    throw new IllegalArgumentException("ticket number is invalid or duplicated");
+                }
+                if (!status.equals("Pending") && !status.equals("Processed")) {
+                    throw new IllegalArgumentException("ticket status is invalid");
+                }
+                if (submittedAt.trim().isEmpty()
+                        || requesterName.trim().isEmpty()
+                        || issueDescription.trim().isEmpty()) {
+                    throw new IllegalArgumentException("ticket details cannot be blank");
+                }
+
+                ticketNumbers.add(ticketNumber);
+                ticketStatuses.add(status);
+                submissionTimes.add(submittedAt);
+                requesterNames.add(requesterName);
+                issueDescriptions.add(issueDescription);
+                highestTicketNumber = Math.max(highestTicketNumber, ticketNumber);
+                loadedCount++;
+            } catch (IllegalArgumentException exception) {
+                System.out.println("Warning: Skipping invalid saved ticket on line "
+                        + (lineIndex + 1) + ": " + exception.getMessage() + ".");
+            }
+        }
+
+        rebuildWaitingQueue();
+        nextTicketNumber = highestTicketNumber == Integer.MAX_VALUE
+                ? -1 : highestTicketNumber + 1;
+
+        System.out.println("Loaded " + loadedCount + " saved ticket record(s); "
+                + ticketQueue.size() + " pending ticket(s) restored to the FIFO queue.");
+    }
+
+    private static void rebuildWaitingQueue() {
+        int previousTicketNumber = 0;
+        int pendingCount = 0;
+
+        for (String status : ticketStatuses) {
+            if (status.equals("Pending")) {
+                pendingCount++;
+            }
+        }
+
+        for (int count = 0; count < pendingCount; count++) {
+            int nextIndex = -1;
+            for (int index = 0; index < ticketNumbers.size(); index++) {
+                int ticketNumber = ticketNumbers.get(index);
+                if (ticketStatuses.get(index).equals("Pending")
+                        && ticketNumber > previousTicketNumber
+                        && (nextIndex < 0 || ticketNumber < ticketNumbers.get(nextIndex))) {
+                    nextIndex = index;
+                }
+            }
+
+            if (nextIndex < 0) {
+                break;
+            }
+
+            int ticketNumber = ticketNumbers.get(nextIndex);
+            if (!ticketQueue.offer(ticketNumber)) {
+                System.out.println("Warning: Unable to restore ticket "
+                        + formatTicketNumber(ticketNumber) + " to the waiting queue.");
+                break;
+            }
+            previousTicketNumber = ticketNumber;
+        }
+    }
+
+    private static void saveTickets() throws IOException {
+        ArrayList<String> savedLines = new ArrayList<String>();
+        for (int index = 0; index < ticketNumbers.size(); index++) {
+            savedLines.add(ticketNumbers.get(index)
+                    + "|" + escapeSavedField(ticketStatuses.get(index))
+                    + "|" + escapeSavedField(submissionTimes.get(index))
+                    + "|" + escapeSavedField(requesterNames.get(index))
+                    + "|" + escapeSavedField(issueDescriptions.get(index)));
+        }
+
+        Files.write(TEMP_DATA_FILE, savedLines, StandardCharsets.UTF_8);
+        try {
+            Files.move(TEMP_DATA_FILE, DATA_FILE, StandardCopyOption.ATOMIC_MOVE,
+                    StandardCopyOption.REPLACE_EXISTING);
+        } catch (AtomicMoveNotSupportedException exception) {
+            Files.move(TEMP_DATA_FILE, DATA_FILE, StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+    private static String escapeSavedField(String value) {
+        StringBuilder escaped = new StringBuilder();
+        for (int index = 0; index < value.length(); index++) {
+            char character = value.charAt(index);
+            if (character == '\\') {
+                escaped.append("\\\\");
+            } else if (character == '|') {
+                escaped.append("\\|");
+            } else if (character == '\n') {
+                escaped.append("\\n");
+            } else if (character == '\r') {
+                escaped.append("\\r");
+            } else {
+                escaped.append(character);
+            }
+        }
+        return escaped.toString();
+    }
+
+    private static ArrayList<String> splitSavedRecord(String line) {
+        ArrayList<String> fields = new ArrayList<String>();
+        StringBuilder field = new StringBuilder();
+        boolean escaped = false;
+
+        for (int index = 0; index < line.length(); index++) {
+            char character = line.charAt(index);
+            if (escaped) {
+                if (character == 'n') {
+                    field.append('\n');
+                } else if (character == 'r') {
+                    field.append('\r');
+                } else if (character == '\\' || character == '|') {
+                    field.append(character);
+                } else {
+                    throw new IllegalArgumentException("invalid escape sequence");
+                }
+                escaped = false;
+            } else if (character == '\\') {
+                escaped = true;
+            } else if (character == '|') {
+                fields.add(field.toString());
+                field.setLength(0);
+            } else {
+                field.append(character);
+            }
+        }
+
+        if (escaped) {
+            throw new IllegalArgumentException("unfinished escape sequence");
+        }
+        fields.add(field.toString());
+        return fields;
+    }
+
+    private static void removeTicketRecord(int index) {
+        ticketNumbers.remove(index);
+        requesterNames.remove(index);
+        issueDescriptions.remove(index);
+        submissionTimes.remove(index);
+        ticketStatuses.remove(index);
     }
 
     private static void sortByRequesterName() {
