@@ -14,7 +14,7 @@ The IT Help Desk Ticketing System is a console-based Java application for record
 
 ## Use Cases and Features
 
-- Create a ticket with a requester name and issue description.
+- Create a ticket with a requester name and issue description. Names may contain letters, spaces, apostrophes, and hyphens; digits and other symbols are rejected.
 - Automatically assign a unique ticket number and submission timestamp.
 - Add each new ticket to the waiting queue.
 - Display all ticket records, including their status.
@@ -24,7 +24,7 @@ The IT Help Desk Ticketing System is a console-based Java application for record
 - Process the next ticket, marking it as processed.
 - Sort ticket records by requester name or ticket number.
 - Save ticket records locally and reload them on the next launch.
-- Reject blank ticket details and invalid menu or ticket-number input with clear messages.
+- Reject invalid requester names, blank ticket details, and invalid menu or ticket-number input with clear messages.
 - To return to the main menu, enter `0` at a ticket creation or search prompt, or choose `0` in the Queue Operations menu. Display and sort actions return to the main menu automatically when complete.
 - Handle empty record lists and empty queues without terminating unexpectedly.
 
@@ -86,12 +86,6 @@ Select a menu option by entering its number. Creating a ticket automatically enq
 
 *The running application’s main menu and available operations.*
 
-### Input Validation
-
-![Invalid menu selections are rejected and the application prompts again](screenshots/input-validation.png)
-
-*Out-of-range and non-numeric menu entries are rejected without exiting the application.*
-
 ### Creating a Ticket
 
 ![Creating a help desk ticket and adding it to the queue](screenshots/ticket-creation.png)
@@ -139,3 +133,17 @@ Select a menu option by entering its number. Creating a ticket automatically enq
 ![Returning to the main menu from ticket creation](screenshots/return-to-main-menu.png)
 
 *Entering `0` cancels ticket creation or a ticket search and returns to the main menu. The same return choice is available in the Queue Operations menu; display and sort actions return automatically when complete.*
+
+### Input Validation and Error Handling
+
+![Invalid menu selections are rejected and the application prompts again](screenshots/input-validation.png)
+
+*Out-of-range and non-numeric menu entries are rejected without exiting the application.*
+
+![Invalid requester names are rejected and the program prompts again](screenshots/invalid-requester-name.png)
+
+*Names containing digits or unsupported symbols are rejected while the program continues prompting for a valid requester name.*
+
+![A clear message is shown when a searched ticket does not exist](screenshots/ticket-search-not-found.png)
+
+*Searching for a ticket number with no matching record displays a clear not-found message.*

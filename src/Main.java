@@ -106,7 +106,7 @@ public class Main {
 
         System.out.println("\n--- Create Help Desk Ticket ---");
         System.out.println("Enter 0 at either prompt to return to the main menu.");
-        String requesterName = readNonBlankLine("Requester name: ");
+        String requesterName = readRequesterName();
         if (requesterName == null) {
             return;
         }
@@ -149,6 +149,25 @@ public class Main {
         nextTicketNumber++;
         System.out.println("Ticket created and added to the queue.");
         displayTicket(ticketNumbers.size() - 1);
+    }
+
+    private static String readRequesterName() {
+        while (true) {
+            String value = readLine("Requester name: ");
+            if (value == null) {
+                return null;
+            }
+
+            value = value.trim();
+            if (value.equals("0")) {
+                System.out.println("Returning to the main menu.");
+                return null;
+            }
+            if (value.matches("\\p{L}[\\p{L}\\p{M}]*(?:(?: +|['’\\-])\\p{L}[\\p{L}\\p{M}]*)*")) {
+                return value;
+            }
+            System.out.println("Invalid name. Use letters, spaces, apostrophes, or hyphens only.");
+        }
     }
 
     private static void displayAllTickets() {
