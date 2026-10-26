@@ -467,8 +467,7 @@ public class Main {
         }
 
         System.out.println("\n--- Bubble Sort by Requester Name ---");
-        System.out.println("Before sorting:");
-        displayAllTickets();
+        displaySortSection("BEFORE SORTING - ORIGINAL RECORD ORDER");
 
         for (int end = requesterNames.size() - 1; end > 0; end--) {
             boolean swapped = false;
@@ -483,8 +482,7 @@ public class Main {
             }
         }
 
-        System.out.println("After sorting by requester name:");
-        displayAllTickets();
+        displaySortSection("AFTER SORTING - SORTED BY REQUESTER NAME");
         System.out.println("The FIFO queue order was not changed.");
     }
 
@@ -495,8 +493,7 @@ public class Main {
         }
 
         System.out.println("\n--- Insertion Sort by Ticket Number ---");
-        System.out.println("Before sorting:");
-        displayAllTickets();
+        displaySortSection("BEFORE SORTING - ORIGINAL RECORD ORDER");
 
         for (int index = 1; index < ticketNumbers.size(); index++) {
             int position = index;
@@ -507,9 +504,15 @@ public class Main {
             }
         }
 
-        System.out.println("After sorting by ticket number:");
-        displayAllTickets();
+        displaySortSection("AFTER SORTING - SORTED BY TICKET NUMBER");
         System.out.println("The FIFO queue order was not changed.");
+    }
+
+    private static void displaySortSection(String heading) {
+        System.out.println("\n========== " + heading + " ==========");
+        for (int index = 0; index < ticketNumbers.size(); index++) {
+            displayTicket(index);
+        }
     }
 
     private static void swapRecords(int firstIndex, int secondIndex) {
