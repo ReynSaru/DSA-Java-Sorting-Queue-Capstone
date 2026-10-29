@@ -44,7 +44,7 @@ public class Main {
 
         while (running) {
             displayMainMenu();
-            int choice = readIntegerInRange("Choose an option: ", 1, 7);
+            int choice = readIntegerInRange("Choose an option: ", 1, 8);
 
             if (choice == END_OF_INPUT) {
                 break;
@@ -70,6 +70,9 @@ public class Main {
                     sortByTicketNumber();
                     break;
                 case 7:
+                    deleteTicket();
+                    break;
+                case 8:
                     running = false;
                     System.out.println("Thank you for using the IT Help Desk Ticketing System.");
                     break;
@@ -95,7 +98,8 @@ public class Main {
         System.out.println("4. Queue operations");
         System.out.println("5. Sort records by requester name (Bubble Sort)");
         System.out.println("6. Sort records by ticket number (Insertion Sort)");
-        System.out.println("7. Exit");
+        System.out.println("7. Permanently delete a ticket");
+        System.out.println("8. Exit");
     }
 
     private static void addTicket() {
@@ -202,6 +206,85 @@ public class Main {
 
         System.out.println("\n--- Ticket Found ---");
         displayTicket(index);
+    }
+
+    private static void deleteTicket() {
+        if (ticketNumbers.isEmpty()) {
+            System.out.println("\nNo ticket records are available to delete.");
+            return;
+        }
+
+        System.out.println("\nEnter 0 to return to the main menu.");
+        int ticketNumber = readTicketNumber("Enter the ticket number to delete: ");
+        if (ticketNumber == END_OF_INPUT || ticketNumber == CANCEL_OPERATION) {
+            return;
+        }
+
+        int index = findTicketIndex(ticketNumber);
+        if (index < 0) {
+            System.out.println("No ticket found with number " + formatTicketNumber(ticketNumber) + ".");
+            return;
+        }
+
+        System.out.println("\n--- Ticket Selected for Deletion ---");
+        displayTicket(index);
+        if (!confirmTicketDeletion()) {
+            return;
+        }
+
+        boolean pending = ticketStatuses.get(index).equals("Pending");
+        if (pending && !ticketQueue.contains(ticketNumber)) {
+            System.out.println("Queue error: pending ticket " + formatTicketNumber(ticketNumber)
+                    + " is not in the waiting queue. No ticket was deleted.");
+            return;
+        }
+
+        String requesterName = requesterNames.get(index);
+        String issueDescription = issueDescriptions.get(index);
+        String submissionTime = submissionTimes.get(index);
+        String status = ticketStatuses.get(index);
+        removeTicketRecord(index);
+
+        try {
+            saveTickets();
+        } catch (IOException exception) {
+            ticketNumbers.add(index, ticketNumber);
+            requesterNames.add(index, requesterName);
+            issueDescriptions.add(index, issueDescription);
+            submissionTimes.add(index, submissionTime);
+            ticketStatuses.add(index, status);
+            System.out.println("Unable to save the deletion. The ticket was restored: "
+                    + exception.getMessage());
+            return;
+        }
+
+        if (pending && !ticketQueue.remove(Integer.valueOf(ticketNumber))) {
+            System.out.println("Warning: the ticket was deleted from records, but could not be "
+                    + "removed from the waiting queue.");
+            return;
+        }
+
+        System.out.println("Ticket " + formatTicketNumber(ticketNumber)
+                + " was permanently deleted.");
+    }
+
+    private static boolean confirmTicketDeletion() {
+        while (true) {
+            String value = readLine("Permanently delete this ticket? (y/n): ");
+            if (value == null) {
+                return false;
+            }
+
+            String answer = value.trim().toLowerCase(Locale.ROOT);
+            if (answer.equals("y") || answer.equals("yes")) {
+                return true;
+            }
+            if (answer.equals("n") || answer.equals("no")) {
+                System.out.println("Deletion cancelled. The ticket was not changed.");
+                return false;
+            }
+            System.out.println("Invalid response. Enter y to confirm or n to cancel.");
+        }
     }
 
     private static void displayQueueMenu() {
@@ -315,11 +398,35 @@ public class Main {
 
         List<String> savedLines = Files.readAllLines(DATA_FILE, StandardCharsets.UTF_8);
         int highestTicketNumber = 0;
+        int savedNextTicketNumber = 1001;
         int loadedCount = 0;
+        boolean sequenceFound = false;
 
         for (int lineIndex = 0; lineIndex < savedLines.size(); lineIndex++) {
+            String savedLine = savedLines.get(lineIndex);
+            if (savedLine.startsWith("#NEXT|")) {
+                if (sequenceFound) {
+                    System.out.println("Warning: Skipping duplicate ticket sequence on line "
+                            + (lineIndex + 1) + ".");
+                    continue;
+                }
+
+                try {
+                    int parsedNextTicketNumber = Integer.parseInt(savedLine.substring(6));
+                    if (parsedNextTicketNumber < 1 && parsedNextTicketNumber != -1) {
+                        throw new IllegalArgumentException("next ticket number is invalid");
+                    }
+                    savedNextTicketNumber = parsedNextTicketNumber;
+                    sequenceFound = true;
+                } catch (IllegalArgumentException exception) {
+                    System.out.println("Warning: Ignoring invalid ticket sequence on line "
+                            + (lineIndex + 1) + ".");
+                }
+                continue;
+            }
+
             try {
-                ArrayList<String> fields = splitSavedRecord(savedLines.get(lineIndex));
+                ArrayList<String> fields = splitSavedRecord(savedLine);
                 if (fields.size() != 5) {
                     throw new IllegalArgumentException("expected five fields");
                 }
@@ -356,8 +463,10 @@ public class Main {
         }
 
         rebuildWaitingQueue();
-        nextTicketNumber = highestTicketNumber == Integer.MAX_VALUE
+        int nextNumberAfterHighest = highestTicketNumber == Integer.MAX_VALUE
                 ? -1 : highestTicketNumber + 1;
+        nextTicketNumber = savedNextTicketNumber == -1 || nextNumberAfterHighest == -1
+                ? -1 : Math.max(savedNextTicketNumber, nextNumberAfterHighest);
 
         System.out.println("Loaded " + loadedCount + " saved ticket record(s); "
                 + ticketQueue.size() + " pending ticket(s) restored to the FIFO queue.");
@@ -400,6 +509,7 @@ public class Main {
 
     private static void saveTickets() throws IOException {
         ArrayList<String> savedLines = new ArrayList<String>();
+        savedLines.add("#NEXT|" + nextTicketNumber);
         for (int index = 0; index < ticketNumbers.size(); index++) {
             savedLines.add(ticketNumbers.get(index)
                     + "|" + escapeSavedField(ticketStatuses.get(index))

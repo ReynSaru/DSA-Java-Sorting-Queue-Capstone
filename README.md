@@ -22,10 +22,11 @@ The IT Help Desk Ticketing System is a console-based Java application for record
 - Display the waiting queue in FIFO order.
 - Peek at the next ticket without removing it.
 - Process the next ticket, marking it as processed.
+- Permanently delete a pending or processed ticket after confirmation. Deleting a pending ticket also removes it from the waiting queue.
 - Sort ticket records by requester name or ticket number.
 - Save ticket records locally and reload them on the next launch.
 - Reject invalid requester names, blank ticket details, and invalid menu or ticket-number input with clear messages.
-- To return to the main menu, enter `0` at a ticket creation or search prompt, or choose `0` in the Queue Operations menu. Display and sort actions return to the main menu automatically when complete.
+- To return to the main menu, enter `0` at a ticket creation, search, or delete prompt, or choose `0` in the Queue Operations menu. Display, sort, and delete actions return to the main menu automatically when complete.
 - Handle empty record lists and empty queues without terminating unexpectedly.
 
 ## Data Structure Explanation
@@ -42,7 +43,7 @@ The values at a given index in all five lists describe the same ticket. The sort
 
 The waiting queue is a `Queue<Integer>` backed by `ArrayDeque<Integer>`. It contains ticket numbers in arrival order, not copies of ticket records. Queue display and peek operations use each queued number to find its record. Processing removes only the queue's head ticket and marks that ticket as processed. Sorting changes the order of records in the `ArrayList`s, but never changes the queue.
 
-Ticket records are saved to `tickets.txt` in the directory where the program is launched. The file is updated when a ticket is created or processed and loaded on startup. Pending tickets are restored to the queue in ticket-number/arrival order, even if the record lists had been sorted before the application closed. The data file is excluded from Git so local ticket details are not accidentally committed.
+Ticket records are saved to `tickets.txt` in the directory where the program is launched. The file is updated when a ticket is created, processed, or deleted and loaded on startup. A saved next-ticket counter ensures ticket numbers are not reused after a ticket is deleted. Deleting a pending ticket also removes it from the waiting queue; processed tickets are removed from the records. Pending tickets are restored to the queue in ticket-number/arrival order, even if the record lists had been sorted before the application closed. The data file is excluded from Git so local ticket details are not accidentally committed.
 
 The application uses only static methods and built-in Java data types and collections for its procedural logic. It does not define custom ticket/entity classes or use custom objects.
 
@@ -76,7 +77,7 @@ javac -d out src/Main.java
 java -cp out Main
 ```
 
-Select a menu option by entering its number. Creating a ticket automatically enqueues and saves it. Choose **Queue operations** to display the waiting list, peek at the next ticket, or process it. Processed status is saved immediately. On later launches, the application reloads saved tickets and restores pending tickets to the queue.
+Select a menu option by entering its number. Creating a ticket automatically enqueues and saves it. Choose **Queue operations** to display the waiting list, peek at the next ticket, or process it. Choose **Permanently delete a ticket** to remove a pending or processed record after confirming; deletion is saved immediately. On later launches, the application reloads saved tickets and restores pending tickets to the queue.
 
 ## Screenshots of the System
 
@@ -84,7 +85,7 @@ Select a menu option by entering its number. Creating a ticket automatically enq
 
 ![Main menu of the IT Help Desk Ticketing System](screenshots/main-menu.png)
 
-*The running application’s main menu and available operations.*
+*The running application’s main menu, including permanent ticket deletion as option 7 and Exit as option 8.*
 
 ### Creating a Ticket
 
@@ -127,6 +128,12 @@ Select a menu option by entering its number. Creating a ticket automatically enq
 ![Insertion Sort showing ticket records before and after sorting by ticket number](screenshots/sort-by-ticket-number.png)
 
 *The records are arranged by ticket number while the FIFO queue order remains unchanged.*
+
+### Deleting a Ticket
+
+![Confirming and permanently deleting a ticket](screenshots/ticket-deletion.png)
+
+*The selected ticket is shown before deletion, and the user confirms the permanent removal.*
 
 ### Returning to the Main Menu
 
